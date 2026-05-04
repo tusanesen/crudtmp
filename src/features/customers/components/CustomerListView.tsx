@@ -1,6 +1,7 @@
 import { Table } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
+import { useNavigate } from 'react-router-dom'
 import type { Customer } from '../../../types/entities'
 import { getCustomers } from '../../../api/customerApi'
 
@@ -13,6 +14,8 @@ const columns: ColumnsType<Customer> = [
 ]
 
 export function CustomerListView() {
+  const navigate = useNavigate()
+
   const { data, isLoading } = useQuery<Customer[], Error>({
     queryKey: ['customers'],
     queryFn: getCustomers,
@@ -26,6 +29,10 @@ export function CustomerListView() {
       loading={isLoading}
       pagination={{ pageSize: 8 }}
       scroll={{ x: 900 }}
+      onRow={(record) => ({
+        onClick: () => navigate(`/customers/${record.id}`),
+        style: { cursor: 'pointer' },
+      })}
     />
   )
 }

@@ -3,8 +3,11 @@ import type { ReactNode } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout, Menu, Space, Typography } from 'antd'
 import { ProductListView } from './features/products/components/ProductListView'
+import { ProductDetailView } from './features/products/components/ProductDetailView'
 import { CustomerListView } from './features/customers/components/CustomerListView'
+import { CustomerDetailView } from './features/customers/components/CustomerDetailView'
 import { OrderListView } from './features/orders/components/OrderListView'
+import { OrderDetailView } from './features/orders/components/OrderDetailView'
 import { OrderItemListView } from './features/orderItems/components/OrderItemListView'
 import './App.css'
 
@@ -35,15 +38,20 @@ const MENU_ITEMS = [
   { key: '/products', label: <Link to="/products">Products</Link> },
   { key: '/customers', label: <Link to="/customers">Customers</Link> },
   { key: '/orders', label: <Link to="/orders">Orders</Link> },
-  { key: '/order-items', label: <Link to="/order-items">Order Items</Link> },
 ]
 
 function App() {
   const location = useLocation()
 
   const selectedMenuKey = useMemo(() => {
-    if (location.pathname.startsWith('/order-items')) {
-      return '/order-items'
+    if (location.pathname.startsWith('/products')) {
+      return '/products'
+    }
+    if (location.pathname.startsWith('/customers')) {
+      return '/customers'
+    }
+    if (location.pathname.startsWith('/orders')) {
+      return '/orders'
     }
     return location.pathname
   }, [location.pathname])
@@ -68,6 +76,7 @@ function App() {
                 </EntityPage>
               }
             />
+            <Route path="/products/:productId" element={<ProductDetailView />} />
             <Route
               path="/customers"
               element={
@@ -76,6 +85,7 @@ function App() {
                 </EntityPage>
               }
             />
+            <Route path="/customers/:customerId" element={<CustomerDetailView />} />
             <Route
               path="/orders"
               element={
@@ -84,6 +94,7 @@ function App() {
                 </EntityPage>
               }
             />
+            <Route path="/orders/:orderId" element={<OrderDetailView />} />
             <Route
               path="/order-items"
               element={
