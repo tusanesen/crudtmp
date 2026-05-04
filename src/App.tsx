@@ -10,6 +10,7 @@ import { OrderListView } from './features/orders/OrderListView'
 import { OrderDetailView } from './features/orders/OrderDetailView'
 import { OrderItemListView } from './features/orderItems/OrderItemListView'
 import { OrderItemDetailView } from './features/orderItems/OrderItemDetailView'
+import { OrderItemEditView } from './features/orderItems/OrderItemEditView'
 import './App.css'
 
 const { Header, Sider, Content } = Layout
@@ -108,6 +109,7 @@ function App() {
                 </EntityPage>
               }
             />
+            <Route path="/order-items/edit" element={<OrderItemEditView />} />
             <Route path="/order-items/:orderItemId" element={<OrderItemDetailView />} />
           </Routes>
         </Content>

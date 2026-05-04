@@ -9,6 +9,7 @@ type EntityListViewProps<T extends EntityBase> = {
   dataSource: TableProps<T>['dataSource']
   loading?: TableProps<T>['loading']
   onRow?: TableProps<T>['onRow']
+  rowSelection?: TableProps<T>['rowSelection']
   rowKey?: TableProps<T>['rowKey']
   pagination?: TableProps<T>['pagination']
   scroll?: TableProps<T>['scroll']
@@ -26,8 +27,17 @@ export class EntityListView<T extends EntityBase> extends PureComponent<EntityLi
   })
 
   render() {
-    const { apiPath: _apiPath, columns, dataSource, loading, onRow, rowKey, pagination, scroll } =
-      this.props
+    const {
+      apiPath: _apiPath,
+      columns,
+      dataSource,
+      loading,
+      onRow,
+      rowSelection,
+      rowKey,
+      pagination,
+      scroll,
+    } = this.props
 
     return (
       <Table<T>
@@ -36,6 +46,7 @@ export class EntityListView<T extends EntityBase> extends PureComponent<EntityLi
         dataSource={dataSource}
         loading={loading}
         onRow={onRow ?? this.getDefaultOnRow}
+        rowSelection={rowSelection}
         pagination={pagination ?? { pageSize: 8 }}
         scroll={scroll ?? { x: 900 }}
       />
