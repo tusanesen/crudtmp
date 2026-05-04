@@ -2,8 +2,7 @@ import { Table, Tag } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
 import type { Product } from '../../../types/entities'
-
-const API_BASE_URL = 'http://localhost:3000'
+import { getProducts } from '../../../api/productApi'
 
 const columns: ColumnsType<Product> = [
   { title: 'ID', dataIndex: 'id', key: 'id' },
@@ -28,13 +27,7 @@ const columns: ColumnsType<Product> = [
 export function ProductListView() {
   const { data, isLoading } = useQuery<Product[], Error>({
     queryKey: ['products'],
-    queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/products`)
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`)
-      }
-      return response.json() as Promise<Product[]>
-    },
+    queryFn: getProducts,
   })
 
   return (
