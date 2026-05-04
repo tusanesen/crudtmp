@@ -1,7 +1,7 @@
 import { Card, Descriptions, Space, Typography } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { getProductById } from '../../../api/productApi'
+import { getProductById } from '../../api/productApi'
 
 const { Text, Title } = Typography
 

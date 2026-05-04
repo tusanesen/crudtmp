@@ -1,8 +1,8 @@
 import { Card, Descriptions, Space, Tag, Typography } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { getOrderById } from '../../../api/orderApi'
-import { OrderStatus } from '../../../types/enums'
+import { getOrderById } from '../../api/orderApi'
+import { OrderStatus } from '../../types/enums'
 
 const { Text, Title } = Typography
 

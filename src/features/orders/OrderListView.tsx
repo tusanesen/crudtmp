@@ -2,9 +2,9 @@ import { Table, Tag } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
-import type { Order } from '../../../types/entities'
-import { OrderStatus } from '../../../types/enums'
-import { getOrders } from '../../../api/orderApi'
+import type { Order } from '../../types/entities'
+import { OrderStatus } from '../../types/enums'
+import { getOrders } from '../../api/orderApi'
 
 const columns: ColumnsType<Order> = [
   { title: 'ID', dataIndex: 'id', key: 'id' },

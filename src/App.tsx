@@ -2,13 +2,14 @@ import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout, Menu, Space, Typography } from 'antd'
-import { ProductListView } from './features/products/components/ProductListView'
-import { ProductDetailView } from './features/products/components/ProductDetailView'
-import { CustomerListView } from './features/customers/components/CustomerListView'
-import { CustomerDetailView } from './features/customers/components/CustomerDetailView'
-import { OrderListView } from './features/orders/components/OrderListView'
-import { OrderDetailView } from './features/orders/components/OrderDetailView'
-import { OrderItemListView } from './features/orderItems/components/OrderItemListView'
+import { ProductListView } from './features/products/ProductListView'
+import { ProductDetailView } from './features/products/ProductDetailView'
+import { CustomerListView } from './features/customers/CustomerListView'
+import { CustomerDetailView } from './features/customers/CustomerDetailView'
+import { OrderListView } from './features/orders/OrderListView'
+import { OrderDetailView } from './features/orders/OrderDetailView'
+import { OrderItemListView } from './features/orderItems/OrderItemListView'
+import { OrderItemDetailView } from './features/orderItems/OrderItemDetailView'
 import './App.css'
 
 const { Header, Sider, Content } = Layout
@@ -38,6 +39,7 @@ const MENU_ITEMS = [
   { key: '/products', label: <Link to="/products">Products</Link> },
   { key: '/customers', label: <Link to="/customers">Customers</Link> },
   { key: '/orders', label: <Link to="/orders">Orders</Link> },
+  { key: '/order-items', label: <Link to="/order-items">Order Items</Link> },
 ]
 
 function App() {
@@ -52,6 +54,9 @@ function App() {
     }
     if (location.pathname.startsWith('/orders')) {
       return '/orders'
+    }
+    if (location.pathname.startsWith('/order-items')) {
+      return '/order-items'
     }
     return location.pathname
   }, [location.pathname])
@@ -103,6 +108,7 @@ function App() {
                 </EntityPage>
               }
             />
+            <Route path="/order-items/:orderItemId" element={<OrderItemDetailView />} />
           </Routes>
         </Content>
       </Layout>
