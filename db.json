@@ -1,0 +1,85 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Wireless Keyboard",
+      "sku": "KB-1001",
+      "category": "Accessories",
+      "price": 59.99,
+      "inStock": true
+    },
+    {
+      "id": 2,
+      "name": "USB-C Monitor",
+      "sku": "MN-2108",
+      "category": "Displays",
+      "price": 229.5,
+      "inStock": true
+    },
+    {
+      "id": 3,
+      "name": "Noise Canceling Headphones",
+      "sku": "HP-4420",
+      "category": "Audio",
+      "price": 149.0,
+      "inStock": false
+    }
+  ],
+  "customers": [
+    {
+      "id": 1,
+      "fullName": "Marta Diaz",
+      "email": "marta.diaz@example.com",
+      "phone": "+1-555-0101",
+      "city": "Dallas"
+    },
+    {
+      "id": 2,
+      "fullName": "Daniel Grant",
+      "email": "daniel.grant@example.com",
+      "phone": "+1-555-0102",
+      "city": "Seattle"
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "orderNumber": "ORD-2026-1001",
+      "customerId": 1,
+      "orderDate": "2026-05-01",
+      "status": "Shipped",
+      "totalAmount": 289.49
+    },
+    {
+      "id": 2,
+      "orderNumber": "ORD-2026-1002",
+      "customerId": 2,
+      "orderDate": "2026-05-02",
+      "status": "Delivered",
+      "totalAmount": 149.0
+    }
+  ],
+  "orderItems": [
+    {
+      "id": 1,
+      "orderId": 1,
+      "productId": 1,
+      "quantity": 1,
+      "unitPrice": 59.99
+    },
+    {
+      "id": 2,
+      "orderId": 1,
+      "productId": 2,
+      "quantity": 1,
+      "unitPrice": 229.5
+    },
+    {
+      "id": 3,
+      "orderId": 2,
+      "productId": 3,
+      "quantity": 1,
+      "unitPrice": 149.0
+    }
+  ]
+}
