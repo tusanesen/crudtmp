@@ -1,9 +1,8 @@
-import { Table } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
-import { useNavigate } from 'react-router-dom'
 import type { OrderItem } from '../../types/entities'
 import { getOrderItems } from '../../api/orderItemApi'
+import { EntityListView } from '../../core/EntityListView'
 
 const columns: ColumnsType<OrderItem> = [
   { title: 'ID', dataIndex: 'id', key: 'id' },
@@ -24,25 +23,17 @@ const columns: ColumnsType<OrderItem> = [
 ]
 
 export function OrderItemListView() {
-  const navigate = useNavigate()
-
   const { data, isLoading } = useQuery<OrderItem[], Error>({
     queryKey: ['orderItems'],
     queryFn: getOrderItems,
   })
 
   return (
-    <Table<OrderItem>
-      rowKey="id"
+    <EntityListView<OrderItem>
+      apiPath="order-items"
       columns={columns}
       dataSource={data ?? []}
       loading={isLoading}
-      pagination={{ pageSize: 8 }}
-      scroll={{ x: 900 }}
-      onRow={(record) => ({
-        onClick: () => navigate(`/order-items/${record.id}`),
-        style: { cursor: 'pointer' },
-      })}
     />
   )
 }

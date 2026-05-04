@@ -1,9 +1,9 @@
-import { Table, Tag } from 'antd'
+import { Tag } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
-import { useNavigate } from 'react-router-dom'
 import type { Product } from '../../types/entities'
 import { getProducts } from '../../api/productApi'
+import { EntityListView } from '../../core/EntityListView'
 
 const columns: ColumnsType<Product> = [
   { title: 'ID', dataIndex: 'id', key: 'id' },
@@ -26,25 +26,17 @@ const columns: ColumnsType<Product> = [
 ]
 
 export function ProductListView() {
-  const navigate = useNavigate()
-
   const { data, isLoading } = useQuery<Product[], Error>({
     queryKey: ['products'],
     queryFn: getProducts,
   })
 
   return (
-    <Table<Product>
-      rowKey="id"
+    <EntityListView<Product>
+      apiPath="products"
       columns={columns}
       dataSource={data ?? []}
       loading={isLoading}
-      pagination={{ pageSize: 8 }}
-      scroll={{ x: 900 }}
-      onRow={(record) => ({
-        onClick: () => navigate(`/products/${record.id}`),
-        style: { cursor: 'pointer' },
-      })}
     />
   )
 }

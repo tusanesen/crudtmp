@@ -1,7 +1,10 @@
 import type { OrderStatus } from './enums'
 
-export type Product = {
+export type EntityBase = {
   id: number
+}
+
+export type Product = EntityBase & {
   name: string
   sku: string
   category: string
@@ -9,16 +12,14 @@ export type Product = {
   inStock: boolean
 }
 
-export type Customer = {
-  id: number
+export type Customer = EntityBase & {
   fullName: string
   email: string
   phone: string
   city: string
 }
 
-export type Order = {
-  id: number
+export type Order = EntityBase & {
   orderNumber: string
   customerId: number
   orderDate: string
@@ -26,8 +27,7 @@ export type Order = {
   totalAmount: number
 }
 
-export type OrderItem = {
-  id: number
+export type OrderItem = EntityBase & {
   orderId: number
   productId: number
   quantity: number

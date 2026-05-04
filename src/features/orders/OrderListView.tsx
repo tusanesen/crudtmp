@@ -1,10 +1,10 @@
-import { Table, Tag } from 'antd'
+import { Tag } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
-import { useNavigate } from 'react-router-dom'
 import type { Order } from '../../types/entities'
 import { OrderStatus } from '../../types/enums'
 import { getOrders } from '../../api/orderApi'
+import { EntityListView } from '../../core/EntityListView'
 
 const columns: ColumnsType<Order> = [
   { title: 'ID', dataIndex: 'id', key: 'id' },
@@ -28,25 +28,17 @@ const columns: ColumnsType<Order> = [
 ]
 
 export function OrderListView() {
-  const navigate = useNavigate()
-
   const { data, isLoading } = useQuery<Order[], Error>({
     queryKey: ['orders'],
     queryFn: getOrders,
   })
 
   return (
-    <Table<Order>
-      rowKey="id"
+    <EntityListView<Order>
+      apiPath="orders"
       columns={columns}
       dataSource={data ?? []}
       loading={isLoading}
-      pagination={{ pageSize: 8 }}
-      scroll={{ x: 900 }}
-      onRow={(record) => ({
-        onClick: () => navigate(`/orders/${record.id}`),
-        style: { cursor: 'pointer' },
-      })}
     />
   )
 }
