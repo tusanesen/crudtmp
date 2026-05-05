@@ -1,11 +1,13 @@
-import { Button, Card, Form, InputNumber, Space, Typography } from 'antd'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Button, Card, Form, InputNumber, Select, Space, Typography } from 'antd'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   createOrderItem,
   updateOrderItem,
   type OrderItemPayload,
 } from '../../api/orderItemApi'
+import { getOrders } from '../../api/orderApi'
+import { getProducts } from '../../api/productApi'
 import type { OrderItem } from '../../types/entities'
 
 const { Text, Title } = Typography
@@ -22,6 +24,14 @@ export function OrderItemEditView() {
 
   const { entity } = (location.state as LocationState | null) ?? {}
   const isUpdateMode = Boolean(entity)
+  const { data: orders, isLoading: isOrdersLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: getOrders,
+  })
+  const { data: products, isLoading: isProductsLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: getProducts,
+  })
 
   const mutation = useMutation({
     mutationFn: async (values: OrderItemPayload) => {
@@ -67,7 +77,16 @@ export function OrderItemEditView() {
               label="Order ID"
               rules={[{ required: true, message: 'Order ID is required' }]}
             >
-              <InputNumber min={1} style={{ width: '100%' }} />
+              <Select
+                showSearch
+                optionFilterProp="label"
+                loading={isOrdersLoading}
+                placeholder="Select order"
+                options={(orders ?? []).map((order) => ({
+                  value: order.id,
+                  label: `${order.orderNumber} (#${order.id})`,
+                }))}
+              />
             </Form.Item>
 
             <Form.Item
@@ -75,7 +94,16 @@ export function OrderItemEditView() {
               label="Product ID"
               rules={[{ required: true, message: 'Product ID is required' }]}
             >
-              <InputNumber min={1} style={{ width: '100%' }} />
+              <Select
+                showSearch
+                optionFilterProp="label"
+                loading={isProductsLoading}
+                placeholder="Select product"
+                options={(products ?? []).map((product) => ({
+                  value: product.id,
+                  label: `${product.name} (${product.sku})`,
+                }))}
+              />
             </Form.Item>
 
             <Form.Item

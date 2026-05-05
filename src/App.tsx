@@ -14,22 +14,20 @@ import { OrderItemEditView } from './features/orderItems/OrderItemEditView'
 import './App.css'
 
 const { Header, Sider, Content } = Layout
-const { Title, Text } = Typography
+const { Title } = Typography
 
 type EntityPageProps = {
   title: string
-  endpoint: string
   children: ReactNode
 }
 
-function EntityPage({ title, endpoint, children }: EntityPageProps) {
+function EntityPage({ title, children }: EntityPageProps) {
   return (
     <Space direction="vertical" size={16} className="entity-page">
       <div>
         <Title level={3} className="page-title">
           {title}
         </Title>
-        <Text type="secondary">Source: JSON Server (`{endpoint}`)</Text>
       </div>
       {children}
     </Space>
@@ -77,7 +75,7 @@ function App() {
             <Route
               path="/products"
               element={
-                <EntityPage title="Products" endpoint="products">
+                <EntityPage title="Products">
                   <ProductListView />
                 </EntityPage>
               }
@@ -86,7 +84,7 @@ function App() {
             <Route
               path="/customers"
               element={
-                <EntityPage title="Customers" endpoint="customers">
+                <EntityPage title="Customers">
                   <CustomerListView />
                 </EntityPage>
               }
@@ -95,7 +93,7 @@ function App() {
             <Route
               path="/orders"
               element={
-                <EntityPage title="Orders" endpoint="orders">
+                <EntityPage title="Orders">
                   <OrderListView />
                 </EntityPage>
               }
@@ -104,7 +102,7 @@ function App() {
             <Route
               path="/order-items"
               element={
-                <EntityPage title="Order Items" endpoint="orderItems">
+                <EntityPage title="Order Items">
                   <OrderItemListView />
                 </EntityPage>
               }

@@ -38,3 +38,9 @@
 .page-title {
   margin-bottom: 0.2rem !important;
 }
+
+.entity-list-table .ant-table-selection-column .ant-checkbox-wrapper,
+.entity-list-table .ant-table-selection-column .ant-radio-wrapper {
+  transform: scale(1.2);
+  transform-origin: center;
+}

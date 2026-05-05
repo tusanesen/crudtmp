@@ -34,7 +34,6 @@ export function OrderItemListView() {
       columns={columns}
       dataSource={data ?? []}
       loading={isLoading}
-      enableSingleSelect
       enableCreateEditActions
     />
   )

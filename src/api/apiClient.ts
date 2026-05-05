@@ -47,3 +47,13 @@ export async function putJson<TResponse, TPayload>(
 
   return response.json() as Promise<TResponse>
 }
+
+export async function deleteJson(path: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/${path}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`)
+  }
+}
