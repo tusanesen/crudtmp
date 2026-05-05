@@ -24,6 +24,8 @@ type EntityListViewProps<T extends EntityBase> = {
   onSelectedRowChange?: (selectedRow: T | null) => void
   onSelectedRowsChange?: (selectedRows: T[]) => void
   enableCreateEditActions?: boolean
+  onCreateAction?: () => void
+  onEditAction?: (selectedRow: T) => void
   actions?: {
     createLabel?: string
     editLabel?: string
@@ -58,6 +60,8 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
     onSelectedRowChange,
     onSelectedRowsChange,
     enableCreateEditActions,
+    onCreateAction,
+    onEditAction,
     actions,
     rowKey,
     pagination,
@@ -95,6 +99,10 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
   const selectedRows = useMemo(
     () => dataSource?.filter((item) => selectedRowIds.includes(item.id)) ?? [],
     [dataSource, selectedRowIds],
+  )
+  const selectedSingleRow = useMemo(
+    () => (enableSingleSelect ? selectedRow : selectedRows[0] ?? null),
+    [enableSingleSelect, selectedRow, selectedRows],
   )
 
   const visibleColumns = useMemo(
@@ -246,7 +254,14 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
                 shape="circle"
                 icon={<PlusOutlined />}
                 aria-label={createLabel}
-                onClick={() => navigate(`/${apiPath}/edit`, { state: { returnTo: location.pathname } })}
+                onClick={() => {
+                  if (onCreateAction) {
+                    onCreateAction()
+                    return
+                  }
+
+                  navigate(`/${apiPath}/edit`, { state: { returnTo: location.pathname } })
+                }}
               />
             </Tooltip>
           ) : null}
@@ -257,14 +272,23 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
                 icon={<EditOutlined />}
                 aria-label={editLabel}
                 disabled={enableSingleSelect ? !selectedRow : selectedRows.length !== 1}
-                onClick={() =>
+                onClick={() => {
+                  if (!selectedSingleRow) {
+                    return
+                  }
+
+                  if (onEditAction) {
+                    onEditAction(selectedSingleRow)
+                    return
+                  }
+
                   navigate(`/${apiPath}/edit`, {
                     state: {
-                      entity: enableSingleSelect ? selectedRow : selectedRows[0],
+                      entity: selectedSingleRow,
                       returnTo: location.pathname,
                     },
                   })
-                }
+                }}
               />
             </Tooltip>
           ) : null}

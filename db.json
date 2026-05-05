@@ -79,15 +79,6 @@
       "productDisplay": "USB-C Monitor (MN-2108)",
       "quantity": 1,
       "unitPrice": 229.5
-    },
-    {
-      "id": 3,
-      "orderId": 2,
-      "orderDisplay": "ORD-2026-1002 (#2)",
-      "productId": 3,
-      "productDisplay": "Noise Canceling Headphones (HP-4420)",
-      "quantity": 1,
-      "unitPrice": 149
     }
   ]
 }

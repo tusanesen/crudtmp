@@ -16,13 +16,31 @@ type LocationState = {
   returnTo?: string
 }
 
-export function OrderItemEditView() {
+type OrderItemEditViewProps = {
+  mode?: 'page' | 'detailCtx'
+  entity?: OrderItem
+  returnTo?: string
+  parentOrderId?: number
+  onClose?: () => void
+  onSaved?: (savedEntity: OrderItem) => void
+}
+
+export function OrderItemEditView({
+  mode = 'page',
+  entity: propEntity,
+  returnTo: propReturnTo,
+  parentOrderId,
+  onClose,
+  onSaved,
+}: OrderItemEditViewProps) {
   const [form] = Form.useForm<OrderItemPayload>()
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { entity, returnTo } = (location.state as LocationState | null) ?? {}
+  const state = (location.state as LocationState | null) ?? {}
+  const entity = propEntity ?? state.entity
+  const returnTo = propReturnTo ?? state.returnTo
   const fallbackReturnPath = entity ? `/order-items/${entity.id}` : '/order-items'
   const nextPath = returnTo ?? fallbackReturnPath
   const isUpdateMode = Boolean(entity)
@@ -50,6 +68,12 @@ export function OrderItemEditView() {
     },
     onSuccess: async (savedEntity) => {
       await queryClient.invalidateQueries({ queryKey: ['orderItems'] })
+      if (mode === 'detailCtx') {
+        onSaved?.(savedEntity)
+        onClose?.()
+        return
+      }
+
       if (returnTo) {
         navigate(returnTo)
         return
@@ -59,18 +83,22 @@ export function OrderItemEditView() {
     },
   })
 
-  const initialValues: OrderItemPayload | undefined = entity
+  const initialValues: Partial<OrderItemPayload> | undefined = entity
     ? {
         orderId: entity.orderId,
         productId: entity.productId,
         quantity: entity.quantity,
         unitPrice: entity.unitPrice,
       }
-    : undefined
+    : parentOrderId
+      ? {
+          orderId: parentOrderId,
+        }
+      : undefined
 
   return (
     <Space direction="vertical" size={16} className="entity-page">
-      <Link to={nextPath}>Back</Link>
+      {mode === 'page' ? <Link to={nextPath}>Back</Link> : null}
       <Card>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <Title level={4} style={{ margin: 0 }}>
@@ -89,9 +117,10 @@ export function OrderItemEditView() {
                 showSearch
                 optionFilterProp="label"
                 loading={isOrdersLoading}
+                disabled={Boolean(parentOrderId) && !entity}
                 placeholder="Select order"
-                  options={(orders ?? []).map((order) => ({
-                    value: order.id,
+                options={(orders ?? []).map((order) => ({
+                  value: order.id,
                     label: orderRelation?.getDisplay(order) ?? `#${order.id}`,
                   }))}
                 />
@@ -134,7 +163,18 @@ export function OrderItemEditView() {
               <Button type="primary" htmlType="submit" loading={mutation.isPending}>
                 {isUpdateMode ? 'Save Changes' : 'Create'}
               </Button>
-              <Button onClick={() => navigate(nextPath)}>Cancel</Button>
+              <Button
+                onClick={() => {
+                  if (mode === 'detailCtx') {
+                    onClose?.()
+                    return
+                  }
+
+                  navigate(nextPath)
+                }}
+              >
+                Cancel
+              </Button>
             </Space>
           </Form>
 

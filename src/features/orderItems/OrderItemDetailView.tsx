@@ -3,12 +3,26 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteOrderItem, getOrderItemById } from '../../api/orderItemApi'
+import type { OrderItem } from '../../types/entities'
 
 const { Text, Title } = Typography
 
-export function OrderItemDetailView() {
-  const { orderItemId } = useParams<{ orderItemId: string }>()
-  const parsedOrderItemId = Number(orderItemId)
+type OrderItemDetailViewProps = {
+  mode?: 'page' | 'detailCtx'
+  orderItemId?: number
+  onOpenEdit?: (entity: OrderItem) => void
+  onClose?: () => void
+}
+
+export function OrderItemDetailView({
+  mode = 'page',
+  orderItemId: propOrderItemId,
+  onOpenEdit,
+  onClose,
+}: OrderItemDetailViewProps) {
+  const { orderItemId: routeOrderItemId } = useParams<{ orderItemId: string }>()
+  const parsedOrderItemId = mode === 'detailCtx' ? Number(propOrderItemId) : Number(routeOrderItemId)
+  const orderItemId = mode === 'detailCtx' ? String(propOrderItemId ?? '') : routeOrderItemId
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -23,6 +37,10 @@ export function OrderItemDetailView() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['orderItems'] })
       message.success('Order item deleted')
+      if (mode === 'detailCtx') {
+        onClose?.()
+        return
+      }
       navigate('/order-items')
     },
     onError: (mutationError: Error) => {
@@ -40,7 +58,7 @@ export function OrderItemDetailView() {
 
   return (
     <Space direction="vertical" size={16} className="entity-page">
-      <Link to="/order-items">Back to Order Items</Link>
+      {mode === 'page' ? <Link to="/order-items">Back to Order Items</Link> : null}
       <Card loading={isLoading}>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
@@ -49,14 +67,23 @@ export function OrderItemDetailView() {
                 shape="circle"
                 icon={<EditOutlined />}
                 aria-label="Edit"
-                onClick={() =>
+                onClick={() => {
+                  if (!data) {
+                    return
+                  }
+
+                  if (mode === 'detailCtx') {
+                    onOpenEdit?.(data)
+                    return
+                  }
+
                   navigate('/order-items/edit', {
                     state: {
                       entity: data,
                       returnTo: `/order-items/${parsedOrderItemId}`,
                     },
                   })
-                }
+                }}
                 disabled={!data}
               />
             </Tooltip>

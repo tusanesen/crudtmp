@@ -8,8 +8,14 @@ export type OrderItemPayload = {
   unitPrice: number
 }
 
-export function getOrderItems() {
-  return getJson<OrderItem[]>('orderItems')
+export function getOrderItems(filters?: { orderId?: number }) {
+  const params = new URLSearchParams()
+  if (filters?.orderId) {
+    params.set('orderId', String(filters.orderId))
+  }
+  const queryString = params.toString()
+  const path = queryString ? `orderItems?${queryString}` : 'orderItems'
+  return getJson<OrderItem[]>(path)
 }
 
 export function getOrderItemById(orderItemId: number) {

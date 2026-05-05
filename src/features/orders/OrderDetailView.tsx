@@ -1,8 +1,13 @@
-import { Button, Card, Descriptions, Popconfirm, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { Button, Card, Descriptions, Modal, Popconfirm, Space, Tabs, Tag, Tooltip, Typography, message } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteOrder, getOrderById } from '../../api/orderApi'
+import { OrderItemDetailView } from '../orderItems/OrderItemDetailView'
+import { OrderItemEditView } from '../orderItems/OrderItemEditView'
+import { OrderItemListView } from '../orderItems/OrderItemListView'
+import type { OrderItem } from '../../types/entities'
 import { OrderStatus } from '../../types/enums'
 
 const { Text, Title } = Typography
@@ -12,6 +17,10 @@ export function OrderDetailView() {
   const parsedOrderId = Number(orderId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [activeTabKey, setActiveTabKey] = useState('orderItems')
+  const [detailItemId, setDetailItemId] = useState<number | null>(null)
+  const [editingOrderItem, setEditingOrderItem] = useState<OrderItem | null>(null)
+  const [isCreateOrderItemOpen, setIsCreateOrderItemOpen] = useState(false)
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['order', parsedOrderId],
@@ -38,6 +47,25 @@ export function OrderDetailView() {
   if (isError) {
     return <Text type="danger">Unable to load order: {error.message}</Text>
   }
+
+  const tabItems = [
+    {
+      key: 'orderItems',
+      tab: 'Order Items',
+      children: (
+        <OrderItemListView
+          mode="detailCtx"
+          parentOrderId={parsedOrderId}
+          onOpenDetail={(orderItemId) => setDetailItemId(orderItemId)}
+          onOpenEdit={(entity) => setEditingOrderItem(entity)}
+          onOpenCreate={() => setIsCreateOrderItemOpen(true)}
+        />
+      ),
+    },
+  ]
+
+  const isEditOrderItemOpen = Boolean(editingOrderItem)
+  const isDetailOrderItemOpen = detailItemId !== null
 
   return (
     <Space direction="vertical" size={16} className="entity-page">
@@ -101,8 +129,57 @@ export function OrderDetailView() {
             </Descriptions.Item>
             <Descriptions.Item label="Total Amount">${data?.totalAmount?.toFixed(2)}</Descriptions.Item>
           </Descriptions>
+
+          <Tabs activeKey={activeTabKey} onChange={setActiveTabKey} items={tabItems} />
         </Space>
       </Card>
+
+      <Modal
+        title="Order Item Details"
+        open={isDetailOrderItemOpen}
+        onCancel={() => setDetailItemId(null)}
+        footer={null}
+        destroyOnClose
+        width={900}
+      >
+        {detailItemId ? (
+          <OrderItemDetailView
+            mode="detailCtx"
+            orderItemId={detailItemId}
+            onOpenEdit={(entity) => {
+              setDetailItemId(null)
+              setEditingOrderItem(entity)
+            }}
+            onClose={() => setDetailItemId(null)}
+          />
+        ) : null}
+      </Modal>
+
+      <Modal
+        title={isCreateOrderItemOpen ? 'Create Order Item' : 'Edit Order Item'}
+        open={isCreateOrderItemOpen || isEditOrderItemOpen}
+        onCancel={() => {
+          setIsCreateOrderItemOpen(false)
+          setEditingOrderItem(null)
+        }}
+        footer={null}
+        destroyOnClose
+        width={900}
+      >
+        <OrderItemEditView
+          mode="detailCtx"
+          parentOrderId={parsedOrderId}
+          entity={editingOrderItem ?? undefined}
+          onSaved={() => {
+            setIsCreateOrderItemOpen(false)
+            setEditingOrderItem(null)
+          }}
+          onClose={() => {
+            setIsCreateOrderItemOpen(false)
+            setEditingOrderItem(null)
+          }}
+        />
+      </Modal>
     </Space>
   )
 }
