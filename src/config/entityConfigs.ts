@@ -1,6 +1,7 @@
+import { getCustomers } from '../api/customerApi'
 import { getOrders } from '../api/orderApi'
 import { getProducts } from '../api/productApi'
-import type { EntityBase, Order, OrderItem, Product } from '../types/entities'
+import type { Customer, EntityBase, Order, OrderItem, Product } from '../types/entities'
 
 export type RelationConfig<TEntity, TRelated extends EntityBase> = {
   field: keyof TEntity & string
@@ -11,6 +12,15 @@ export type RelationConfig<TEntity, TRelated extends EntityBase> = {
 }
 
 export const entityRelations = {
+  order: [
+    {
+      field: 'customerId',
+      label: 'Customer',
+      queryKey: 'customers',
+      fetchAll: getCustomers,
+      getDisplay: (customer: Customer) => `${customer.fullName} (#${customer.id})`,
+    },
+  ] as RelationConfig<Order, Customer>[],
   orderItem: [
     {
       field: 'orderId',

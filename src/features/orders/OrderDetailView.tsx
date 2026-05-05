@@ -1,7 +1,8 @@
-import { Card, Descriptions, Space, Tag, Typography } from 'antd'
-import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router-dom'
-import { getOrderById } from '../../api/orderApi'
+import { Button, Card, Descriptions, Popconfirm, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { deleteOrder, getOrderById } from '../../api/orderApi'
 import { OrderStatus } from '../../types/enums'
 
 const { Text, Title } = Typography
@@ -9,11 +10,25 @@ const { Text, Title } = Typography
 export function OrderDetailView() {
   const { orderId } = useParams<{ orderId: string }>()
   const parsedOrderId = Number(orderId)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['order', parsedOrderId],
     queryFn: () => getOrderById(parsedOrderId),
     enabled: Number.isInteger(parsedOrderId) && parsedOrderId > 0,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => deleteOrder(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['orders'] })
+      message.success('Order deleted')
+      navigate('/orders')
+    },
+    onError: (mutationError: Error) => {
+      message.error(`Unable to delete order: ${mutationError.message}`)
+    },
   })
 
   if (!orderId || !Number.isInteger(parsedOrderId) || parsedOrderId <= 0) {
@@ -29,6 +44,48 @@ export function OrderDetailView() {
       <Link to="/orders">Back to Orders</Link>
       <Card loading={isLoading}>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <Tooltip title="Edit">
+              <Button
+                shape="circle"
+                icon={<EditOutlined />}
+                aria-label="Edit"
+                onClick={() =>
+                  navigate('/orders/edit', {
+                    state: {
+                      entity: data,
+                      returnTo: `/orders/${parsedOrderId}`,
+                    },
+                  })
+                }
+                disabled={!data}
+              />
+            </Tooltip>
+            <Popconfirm
+              title="Delete this order?"
+              description="This action cannot be undone."
+              okText="Delete"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
+              onConfirm={() => {
+                if (data) {
+                  deleteMutation.mutate(data.id)
+                }
+              }}
+              disabled={!data}
+            >
+              <Tooltip title="Delete">
+                <Button
+                  danger
+                  shape="circle"
+                  icon={<DeleteOutlined />}
+                  aria-label="Delete"
+                  disabled={!data || deleteMutation.isPending}
+                />
+              </Tooltip>
+            </Popconfirm>
+          </Space>
+
           <Title level={4} style={{ margin: 0 }}>
             Order Details
           </Title>

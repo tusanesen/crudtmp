@@ -42,6 +42,7 @@ export function OrderListView() {
       columns={columns}
       dataSource={data ?? []}
       loading={isLoading}
+      enableCreateEditActions
     />
   )
 }

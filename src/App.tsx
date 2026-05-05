@@ -8,6 +8,7 @@ import { CustomerListView } from './features/customers/CustomerListView'
 import { CustomerDetailView } from './features/customers/CustomerDetailView'
 import { OrderListView } from './features/orders/OrderListView'
 import { OrderDetailView } from './features/orders/OrderDetailView'
+import { OrderEditView } from './features/orders/OrderEditView'
 import { OrderItemListView } from './features/orderItems/OrderItemListView'
 import { OrderItemDetailView } from './features/orderItems/OrderItemDetailView'
 import { OrderItemEditView } from './features/orderItems/OrderItemEditView'
@@ -99,6 +100,7 @@ function App() {
               }
             />
             <Route path="/orders/:orderId" element={<OrderDetailView />} />
+            <Route path="/orders/edit" element={<OrderEditView />} />
             <Route
               path="/order-items"
               element={
