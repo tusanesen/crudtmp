@@ -1,7 +1,8 @@
 import { Card, Descriptions, Space, Tag, Typography } from 'antd'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { getOrderById } from '../../api/orderApi'
+import { entityRelations } from '../../config/entityConfigs'
 import { OrderStatus } from '../../types/enums'
 
 const { Text, Title } = Typography
@@ -15,6 +16,22 @@ export function OrderDetailView() {
     queryFn: () => getOrderById(parsedOrderId),
     enabled: Number.isInteger(parsedOrderId) && parsedOrderId > 0,
   })
+
+  const relationQueries = useQueries({
+    queries: entityRelations.order.map((relation) => ({
+      queryKey: [relation.queryKey],
+      queryFn: relation.fetchAll,
+    })),
+  })
+
+  const customerRelation = entityRelations.order[0]
+  const customers = relationQueries[0]?.data as Array<{ id: number }> | undefined
+  const selectedCustomer = customers?.find((customer) => customer.id === data?.customerId)
+  const customerDisplay = selectedCustomer
+    ? customerRelation.getDisplay(selectedCustomer)
+    : data?.customerId
+      ? `#${data.customerId}`
+      : ''
 
   if (!orderId || !Number.isInteger(parsedOrderId) || parsedOrderId <= 0) {
     return <Text type="danger">Invalid order id.</Text>
@@ -35,7 +52,7 @@ export function OrderDetailView() {
           <Descriptions bordered column={1} size="middle">
             <Descriptions.Item label="ID">{data?.id}</Descriptions.Item>
             <Descriptions.Item label="Order #">{data?.orderNumber}</Descriptions.Item>
-            <Descriptions.Item label="Customer ID">{data?.customerId}</Descriptions.Item>
+            <Descriptions.Item label="Customer">{customerDisplay}</Descriptions.Item>
             <Descriptions.Item label="Order Date">{data?.orderDate}</Descriptions.Item>
             <Descriptions.Item label="Status">
               {data ? (

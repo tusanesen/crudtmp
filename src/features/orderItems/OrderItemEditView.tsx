@@ -1,13 +1,12 @@
 import { Button, Card, Form, InputNumber, Select, Space, Typography } from 'antd'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   createOrderItem,
   updateOrderItem,
   type OrderItemPayload,
 } from '../../api/orderItemApi'
-import { getOrders } from '../../api/orderApi'
-import { getProducts } from '../../api/productApi'
+import { entityRelations } from '../../config/entityConfigs'
 import type { OrderItem } from '../../types/entities'
 
 const { Text, Title } = Typography
@@ -27,14 +26,19 @@ export function OrderItemEditView() {
   const fallbackReturnPath = entity ? `/order-items/${entity.id}` : '/order-items'
   const nextPath = returnTo ?? fallbackReturnPath
   const isUpdateMode = Boolean(entity)
-  const { data: orders, isLoading: isOrdersLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: getOrders,
+  const relationQueries = useQueries({
+    queries: entityRelations.orderItem.map((relation) => ({
+      queryKey: [relation.queryKey],
+      queryFn: relation.fetchAll,
+    })),
   })
-  const { data: products, isLoading: isProductsLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: getProducts,
-  })
+
+  const orderRelation = entityRelations.orderItem.find((relation) => relation.field === 'orderId')
+  const productRelation = entityRelations.orderItem.find((relation) => relation.field === 'productId')
+  const orders = relationQueries[0]?.data as Array<{ id: number }> | undefined
+  const products = relationQueries[1]?.data as Array<{ id: number }> | undefined
+  const isOrdersLoading = relationQueries[0]?.isLoading ?? false
+  const isProductsLoading = relationQueries[1]?.isLoading ?? false
 
   const mutation = useMutation({
     mutationFn: async (values: OrderItemPayload) => {
@@ -80,39 +84,35 @@ export function OrderItemEditView() {
             initialValues={initialValues}
             onFinish={(values) => mutation.mutate(values)}
           >
-            <Form.Item
-              name="orderId"
-              label="Order ID"
-              rules={[{ required: true, message: 'Order ID is required' }]}
-            >
-              <Select
+              <Form.Item name="orderId" label="Order" rules={[{ required: true, message: 'Order is required' }]}>
+                <Select
                 showSearch
                 optionFilterProp="label"
                 loading={isOrdersLoading}
                 placeholder="Select order"
-                options={(orders ?? []).map((order) => ({
-                  value: order.id,
-                  label: `${order.orderNumber} (#${order.id})`,
-                }))}
-              />
-            </Form.Item>
+                  options={(orders ?? []).map((order) => ({
+                    value: order.id,
+                    label: orderRelation?.getDisplay(order) ?? `#${order.id}`,
+                  }))}
+                />
+              </Form.Item>
 
-            <Form.Item
-              name="productId"
-              label="Product ID"
-              rules={[{ required: true, message: 'Product ID is required' }]}
-            >
-              <Select
+              <Form.Item
+                name="productId"
+                label="Product"
+                rules={[{ required: true, message: 'Product is required' }]}
+              >
+                <Select
                 showSearch
                 optionFilterProp="label"
                 loading={isProductsLoading}
                 placeholder="Select product"
-                options={(products ?? []).map((product) => ({
-                  value: product.id,
-                  label: `${product.name} (${product.sku})`,
-                }))}
-              />
-            </Form.Item>
+                  options={(products ?? []).map((product) => ({
+                    value: product.id,
+                    label: productRelation?.getDisplay(product) ?? `#${product.id}`,
+                  }))}
+                />
+              </Form.Item>
 
             <Form.Item
               name="quantity"

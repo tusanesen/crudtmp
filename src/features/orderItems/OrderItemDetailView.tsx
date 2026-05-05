@@ -1,8 +1,9 @@
 import { Button, Card, Descriptions, Popconfirm, Space, Tooltip, Typography, message } from 'antd'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteOrderItem, getOrderItemById } from '../../api/orderItemApi'
+import { entityRelations } from '../../config/entityConfigs'
 
 const { Text, Title } = Typography
 
@@ -17,6 +18,25 @@ export function OrderItemDetailView() {
     queryFn: () => getOrderItemById(parsedOrderItemId),
     enabled: Number.isInteger(parsedOrderItemId) && parsedOrderItemId > 0,
   })
+
+  const relationQueries = useQueries({
+    queries: entityRelations.orderItem.map((relation) => ({
+      queryKey: [relation.queryKey],
+      queryFn: relation.fetchAll,
+    })),
+  })
+
+  const getRelationDisplay = (field: 'orderId' | 'productId', value: number | undefined) => {
+    if (!value) {
+      return ''
+    }
+
+    const relationIndex = entityRelations.orderItem.findIndex((relation) => relation.field === field)
+    const relation = entityRelations.orderItem[relationIndex]
+    const relatedItems = relationQueries[relationIndex]?.data as Array<{ id: number }> | undefined
+    const matched = relatedItems?.find((item) => item.id === value)
+    return matched ? relation.getDisplay(matched) : `#${value}`
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => deleteOrderItem(id),
@@ -90,8 +110,12 @@ export function OrderItemDetailView() {
           </Title>
           <Descriptions bordered column={1} size="middle">
             <Descriptions.Item label="ID">{data?.id}</Descriptions.Item>
-            <Descriptions.Item label="Order ID">{data?.orderId}</Descriptions.Item>
-            <Descriptions.Item label="Product ID">{data?.productId}</Descriptions.Item>
+            <Descriptions.Item label="Order">
+              {getRelationDisplay('orderId', data?.orderId)}
+            </Descriptions.Item>
+            <Descriptions.Item label="Product">
+              {getRelationDisplay('productId', data?.productId)}
+            </Descriptions.Item>
             <Descriptions.Item label="Quantity">{data?.quantity}</Descriptions.Item>
             <Descriptions.Item label="Unit Price">${data?.unitPrice?.toFixed(2)}</Descriptions.Item>
             <Descriptions.Item label="Line Total">
