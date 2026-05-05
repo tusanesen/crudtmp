@@ -14,6 +14,7 @@ const { Text, Title } = Typography
 
 type LocationState = {
   entity?: OrderItem
+  returnTo?: string
 }
 
 export function OrderItemEditView() {
@@ -22,7 +23,9 @@ export function OrderItemEditView() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { entity } = (location.state as LocationState | null) ?? {}
+  const { entity, returnTo } = (location.state as LocationState | null) ?? {}
+  const fallbackReturnPath = entity ? `/order-items/${entity.id}` : '/order-items'
+  const nextPath = returnTo ?? fallbackReturnPath
   const isUpdateMode = Boolean(entity)
   const { data: orders, isLoading: isOrdersLoading } = useQuery({
     queryKey: ['orders'],
@@ -43,6 +46,11 @@ export function OrderItemEditView() {
     },
     onSuccess: async (savedEntity) => {
       await queryClient.invalidateQueries({ queryKey: ['orderItems'] })
+      if (returnTo) {
+        navigate(returnTo)
+        return
+      }
+
       navigate(`/order-items/${savedEntity.id}`)
     },
   })
@@ -58,7 +66,7 @@ export function OrderItemEditView() {
 
   return (
     <Space direction="vertical" size={16} className="entity-page">
-      <Link to="/order-items">Back to Order Items</Link>
+      <Link to={nextPath}>Back</Link>
       <Card>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <Title level={4} style={{ margin: 0 }}>
@@ -126,7 +134,7 @@ export function OrderItemEditView() {
               <Button type="primary" htmlType="submit" loading={mutation.isPending}>
                 {isUpdateMode ? 'Save Changes' : 'Create'}
               </Button>
-              <Button onClick={() => navigate('/order-items')}>Cancel</Button>
+              <Button onClick={() => navigate(nextPath)}>Cancel</Button>
             </Space>
           </Form>
 

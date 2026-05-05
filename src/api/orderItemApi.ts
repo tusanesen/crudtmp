@@ -1,4 +1,4 @@
-import { getJson, postJson, putJson } from './apiClient'
+import { deleteJson, getJson, postJson, putJson } from './apiClient'
 import type { OrderItem } from '../types/entities'
 
 export type OrderItemPayload = {
@@ -22,4 +22,8 @@ export function createOrderItem(payload: OrderItemPayload) {
 
 export function updateOrderItem(orderItemId: number, payload: OrderItemPayload) {
   return putJson<OrderItem, OrderItemPayload>(`orderItems/${orderItemId}`, payload)
+}
+
+export function deleteOrderItem(orderItemId: number) {
+  return deleteJson(`orderItems/${orderItemId}`)
 }

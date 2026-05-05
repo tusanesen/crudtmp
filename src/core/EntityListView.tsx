@@ -9,7 +9,7 @@ import {
   PlusOutlined,
   SettingOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { deleteJson } from '../api/apiClient'
 import type { EntityBase } from '../types/entities'
 
@@ -64,6 +64,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
     scroll,
   } = props
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([])
@@ -245,7 +246,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
                 shape="circle"
                 icon={<PlusOutlined />}
                 aria-label={createLabel}
-                onClick={() => navigate(`/${apiPath}/edit`)}
+                onClick={() => navigate(`/${apiPath}/edit`, { state: { returnTo: location.pathname } })}
               />
             </Tooltip>
           ) : null}
@@ -260,6 +261,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
                   navigate(`/${apiPath}/edit`, {
                     state: {
                       entity: enableSingleSelect ? selectedRow : selectedRows[0],
+                      returnTo: location.pathname,
                     },
                   })
                 }
