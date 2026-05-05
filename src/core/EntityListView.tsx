@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Popconfirm, Space, Table, message } from 'antd'
+import { Button, Checkbox, Modal, Popconfirm, Space, Table, Tooltip, Typography, message } from 'antd'
 import type { TableProps } from 'antd'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  DeleteOutlined,
+  EditOutlined,
+  HolderOutlined,
+  PlusOutlined,
+  SettingOutlined,
+} from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { deleteJson } from '../api/apiClient'
 import type { EntityBase } from '../types/entities'
@@ -30,6 +37,15 @@ type EntityListViewProps<T extends EntityBase> = {
   scroll?: TableProps<T>['scroll']
 }
 
+type ColumnConfig<T extends EntityBase> = {
+  id: string
+  title: string
+  column: NonNullable<TableProps<T>['columns']>[number]
+  visible: boolean
+}
+
+const { Text } = Typography
+
 export function EntityListView<T extends EntityBase>(props: EntityListViewProps<T>) {
   const {
     apiPath,
@@ -51,6 +67,25 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
   const queryClient = useQueryClient()
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([])
+  const [isColumnsModalOpen, setIsColumnsModalOpen] = useState(false)
+  const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null)
+
+  const [columnConfigs, setColumnConfigs] = useState<ColumnConfig<T>[]>(() =>
+    (columns ?? []).map((column, index) => {
+      const rawId =
+        typeof column.key === 'string' || typeof column.key === 'number'
+          ? column.key
+          : Array.isArray(column.dataIndex)
+            ? column.dataIndex.join('.')
+            : column.dataIndex
+      return {
+        id: String(rawId ?? `column-${index}`),
+        title: typeof column.title === 'string' ? column.title : `Column ${index + 1}`,
+        column,
+        visible: true,
+      }
+    }),
+  )
 
   const selectedRow = useMemo(
     () => dataSource?.find((item) => item.id === selectedRowId) ?? null,
@@ -60,6 +95,42 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
     () => dataSource?.filter((item) => selectedRowIds.includes(item.id)) ?? [],
     [dataSource, selectedRowIds],
   )
+
+  const visibleColumns = useMemo(
+    () => columnConfigs.filter((item) => item.visible).map((item) => item.column),
+    [columnConfigs],
+  )
+
+  useEffect(() => {
+    setColumnConfigs((current) => {
+      const nextBase = (columns ?? []).map((column, index) => {
+        const rawId =
+          typeof column.key === 'string' || typeof column.key === 'number'
+            ? column.key
+            : Array.isArray(column.dataIndex)
+              ? column.dataIndex.join('.')
+              : column.dataIndex
+        return {
+          id: String(rawId ?? `column-${index}`),
+          title: typeof column.title === 'string' ? column.title : `Column ${index + 1}`,
+          column,
+        }
+      })
+
+      if (current.length === 0) {
+        return nextBase.map((item) => ({ ...item, visible: true }))
+      }
+
+      const currentById = new Map(current.map((item) => [item.id, item]))
+      return nextBase.map((item) => {
+        const existing = currentById.get(item.id)
+        return {
+          ...item,
+          visible: existing?.visible ?? true,
+        }
+      })
+    })
+  }, [columns])
 
   useEffect(() => {
     if (selectedRowId !== null && !selectedRow) {
@@ -158,25 +229,42 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
   return (
     <Space direction="vertical" size={12} style={{ width: '100%' }}>
       {enableCreateEditActions ? (
-        <Space>
+        <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+          <Tooltip title="Columns">
+            <Button
+              shape="circle"
+              icon={<SettingOutlined />}
+              aria-label="Columns"
+              onClick={() => setIsColumnsModalOpen(true)}
+            />
+          </Tooltip>
           {showCreate ? (
-            <Button type="primary" onClick={() => navigate(`/${apiPath}/edit`)}>
-              {createLabel}
-            </Button>
+            <Tooltip title={createLabel}>
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<PlusOutlined />}
+                aria-label={createLabel}
+                onClick={() => navigate(`/${apiPath}/edit`)}
+              />
+            </Tooltip>
           ) : null}
           {showEdit ? (
-            <Button
-              disabled={enableSingleSelect ? !selectedRow : selectedRows.length !== 1}
-              onClick={() =>
-                navigate(`/${apiPath}/edit`, {
-                  state: {
-                    entity: enableSingleSelect ? selectedRow : selectedRows[0],
-                  },
-                })
-              }
-            >
-              {editLabel}
-            </Button>
+            <Tooltip title={editLabel}>
+              <Button
+                shape="circle"
+                icon={<EditOutlined />}
+                aria-label={editLabel}
+                disabled={enableSingleSelect ? !selectedRow : selectedRows.length !== 1}
+                onClick={() =>
+                  navigate(`/${apiPath}/edit`, {
+                    state: {
+                      entity: enableSingleSelect ? selectedRow : selectedRows[0],
+                    },
+                  })
+                }
+              />
+            </Tooltip>
           ) : null}
           {showDelete ? (
             <Popconfirm
@@ -197,14 +285,18 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
                 }
               }}
             >
-              <Button
-                danger
-                disabled={
-                  (enableSingleSelect ? !selectedRow : selectedRows.length === 0) || deleteMutation.isPending
-                }
-              >
-                {deleteLabel}
-              </Button>
+              <Tooltip title={deleteLabel}>
+                <Button
+                  danger
+                  shape="circle"
+                  icon={<DeleteOutlined />}
+                  aria-label={deleteLabel}
+                  disabled={
+                    (enableSingleSelect ? !selectedRow : selectedRows.length === 0) ||
+                    deleteMutation.isPending
+                  }
+                />
+              </Tooltip>
             </Popconfirm>
           ) : null}
         </Space>
@@ -213,7 +305,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
       <Table<T>
         className="entity-list-table"
         rowKey={rowKey ?? 'id'}
-        columns={columns}
+        columns={visibleColumns}
         dataSource={dataSource}
         loading={loading}
         onRow={onRow ?? defaultOnRow}
@@ -221,6 +313,62 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
         pagination={pagination ?? { pageSize: 8 }}
         scroll={scroll ?? { x: 900 }}
       />
+
+      <Modal
+        title="Manage Columns"
+        open={isColumnsModalOpen}
+        onCancel={() => setIsColumnsModalOpen(false)}
+        footer={null}
+      >
+        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+          {columnConfigs.map((item) => (
+            <div
+              key={item.id}
+              className="column-config-row"
+              draggable
+              onDragStart={() => setDraggedColumnId(item.id)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => {
+                if (!draggedColumnId || draggedColumnId === item.id) {
+                  return
+                }
+
+                setColumnConfigs((current) => {
+                  const sourceIndex = current.findIndex((column) => column.id === draggedColumnId)
+                  const targetIndex = current.findIndex((column) => column.id === item.id)
+                  if (sourceIndex < 0 || targetIndex < 0) {
+                    return current
+                  }
+
+                  const next = [...current]
+                  const [moved] = next.splice(sourceIndex, 1)
+                  next.splice(targetIndex, 0, moved)
+                  return next
+                })
+              }}
+              onDragEnd={() => setDraggedColumnId(null)}
+            >
+              <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                <Space size={10}>
+                  <HolderOutlined style={{ color: '#6b7280', cursor: 'grab' }} />
+                  <Text>{item.title}</Text>
+                </Space>
+                <Checkbox
+                  checked={item.visible}
+                  onChange={(event) => {
+                    const checked = event.target.checked
+                    setColumnConfigs((current) =>
+                      current.map((column) =>
+                        column.id === item.id ? { ...column, visible: checked } : column,
+                      ),
+                    )
+                  }}
+                />
+              </Space>
+            </div>
+          ))}
+        </Space>
+      </Modal>
     </Space>
   )
 }
