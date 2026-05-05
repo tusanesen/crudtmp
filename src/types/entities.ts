@@ -22,6 +22,7 @@ export type Customer = EntityBase & {
 export type Order = EntityBase & {
   orderNumber: string
   customerId: number
+  customerDisplay: string
   orderDate: string
   status: OrderStatus
   totalAmount: number
@@ -29,7 +30,9 @@ export type Order = EntityBase & {
 
 export type OrderItem = EntityBase & {
   orderId: number
+  orderDisplay: string
   productId: number
+  productDisplay: string
   quantity: number
   unitPrice: number
 }

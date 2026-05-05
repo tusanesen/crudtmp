@@ -46,6 +46,7 @@
       "id": 1,
       "orderNumber": "ORD-2026-1001",
       "customerId": 1,
+      "customerDisplay": "Marta Diaz (#1)",
       "orderDate": "2026-05-01",
       "status": "Shipped",
       "totalAmount": 289.49
@@ -54,6 +55,7 @@
       "id": 2,
       "orderNumber": "ORD-2026-1002",
       "customerId": 2,
+      "customerDisplay": "Daniel Grant (#2)",
       "orderDate": "2026-05-02",
       "status": "Delivered",
       "totalAmount": 149
@@ -62,7 +64,9 @@
   "orderItems": [
     {
       "orderId": 1,
+      "orderDisplay": "ORD-2026-1001 (#1)",
       "productId": 1,
+      "productDisplay": "Wireless Keyboard (KB-1001)",
       "quantity": 2,
       "unitPrice": 59.99,
       "id": 1
@@ -70,14 +74,18 @@
     {
       "id": 2,
       "orderId": 1,
+      "orderDisplay": "ORD-2026-1001 (#1)",
       "productId": 2,
+      "productDisplay": "USB-C Monitor (MN-2108)",
       "quantity": 1,
       "unitPrice": 229.5
     },
     {
       "id": 3,
       "orderId": 2,
+      "orderDisplay": "ORD-2026-1002 (#2)",
       "productId": 3,
+      "productDisplay": "Noise Canceling Headphones (HP-4420)",
       "quantity": 1,
       "unitPrice": 149
     }
