@@ -5,10 +5,7 @@ import { deleteOrder, getOrderById } from '../../api/orderApi'
 import { EntityDetailView } from '../../core/EntityDetailView'
 import { EntityRelationsTabs } from '../../core/EntityRelationsTabs'
 import type { RelationTabConfig } from '../../core/EntityRelationsTabs'
-import { OrderItemDetailView } from '../orderItems/OrderItemDetailView'
-import { OrderItemEditView } from '../orderItems/OrderItemEditView'
 import { OrderItemListView } from '../orderItems/OrderItemListView'
-import type { OrderItem } from '../../types/entities'
 import { OrderStatus } from '../../types/enums'
 
 export function OrderDetailView() {
@@ -39,70 +36,7 @@ export function OrderDetailView() {
     {
       key: 'orderItems',
       label: 'Order Items',
-      render: ({ openDetail, openEdit, openCreate }) => (
-        <OrderItemListView
-          mode="detailCtx"
-          parentOrderId={parsedOrderId}
-          onOpenDetail={(orderItemId) => {
-            openDetail({
-              title: 'Order Item Details',
-              width: 900,
-              render: (close) => (
-                <OrderItemDetailView
-                  mode="detailCtx"
-                  orderItemId={orderItemId}
-                  onOpenEdit={(entity) => {
-                    close()
-                    openEdit({
-                      title: 'Edit Order Item',
-                      width: 900,
-                      render: (closeEdit) => (
-                        <OrderItemEditView
-                          mode="detailCtx"
-                          parentOrderId={parsedOrderId}
-                          entity={entity}
-                          onSaved={closeEdit}
-                          onClose={closeEdit}
-                        />
-                      ),
-                    })
-                  }}
-                  onClose={close}
-                />
-              ),
-            })
-          }}
-          onOpenEdit={(entity: OrderItem) => {
-            openEdit({
-              title: 'Edit Order Item',
-              width: 900,
-              render: (close) => (
-                <OrderItemEditView
-                  mode="detailCtx"
-                  parentOrderId={parsedOrderId}
-                  entity={entity}
-                  onSaved={close}
-                  onClose={close}
-                />
-              ),
-            })
-          }}
-          onOpenCreate={() => {
-            openCreate({
-              title: 'Create Order Item',
-              width: 900,
-              render: (close) => (
-                <OrderItemEditView
-                  mode="detailCtx"
-                  parentOrderId={parsedOrderId}
-                  onSaved={close}
-                  onClose={close}
-                />
-              ),
-            })
-          }}
-        />
-      ),
+      render: () => <OrderItemListView mode="detailCtx" parentOrderId={parsedOrderId} />,
     },
   ]
 

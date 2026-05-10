@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Button, Checkbox, Modal, Popconfirm, Space, Table, Tooltip, Typography, message } from 'antd'
 import type { TableProps } from 'antd'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -13,6 +14,33 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { deleteJson } from '../api/apiClient'
 import type { EntityBase } from '../types/entities'
 
+type EntityModalRenderer<TArgs> = {
+  title: string
+  width?: number
+  render: (args: TArgs) => ReactNode
+}
+
+type EntityListDetailContext<T extends EntityBase> = {
+  detail?: EntityModalRenderer<
+    {
+      entityId: number
+      close: () => void
+      openEdit: (entity: T) => void
+    }
+  >
+  edit?: EntityModalRenderer<
+    {
+      entity: T
+      close: () => void
+    }
+  >
+  create?: EntityModalRenderer<
+    {
+      close: () => void
+    }
+  >
+}
+
 type EntityListViewProps<T extends EntityBase> = {
   apiPath: string
   columns: TableProps<T>['columns']
@@ -26,6 +54,7 @@ type EntityListViewProps<T extends EntityBase> = {
   enableCreateEditActions?: boolean
   onCreateAction?: () => void
   onEditAction?: (selectedRow: T) => void
+  detailContext?: EntityListDetailContext<T>
   actions?: {
     createLabel?: string
     editLabel?: string
@@ -62,6 +91,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
     enableCreateEditActions,
     onCreateAction,
     onEditAction,
+    detailContext,
     actions,
     rowKey,
     pagination,
@@ -74,6 +104,9 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([])
   const [isColumnsModalOpen, setIsColumnsModalOpen] = useState(false)
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null)
+  const [detailEntityId, setDetailEntityId] = useState<number | null>(null)
+  const [editingEntity, setEditingEntity] = useState<T | null>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const [columnConfigs, setColumnConfigs] = useState<ColumnConfig<T>[]>(() =>
     (columns ?? []).map((column, index) => {
@@ -164,10 +197,19 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
         return
       }
 
+      if (detailContext?.detail) {
+        setDetailEntityId(record.id)
+        return
+      }
+
       navigate(`/${apiPath}/${record.id}`)
     },
     style: { cursor: 'pointer' },
   })
+
+  const closeDetailModal = () => setDetailEntityId(null)
+  const closeEditModal = () => setEditingEntity(null)
+  const closeCreateModal = () => setIsCreateModalOpen(false)
 
   const normalizedRowSelection: TableProps<T>['rowSelection'] =
     rowSelection ??
@@ -260,6 +302,11 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
                     return
                   }
 
+                  if (detailContext?.create) {
+                    setIsCreateModalOpen(true)
+                    return
+                  }
+
                   navigate(`/${apiPath}/edit`, { state: { returnTo: location.pathname } })
                 }}
               />
@@ -279,6 +326,11 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
 
                   if (onEditAction) {
                     onEditAction(selectedSingleRow)
+                    return
+                  }
+
+                  if (detailContext?.edit) {
+                    setEditingEntity(selectedSingleRow)
                     return
                   }
 
@@ -339,6 +391,55 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
         pagination={pagination ?? { pageSize: 8 }}
         scroll={scroll ?? { x: 900 }}
       />
+
+      <Modal
+        title={detailContext?.detail?.title}
+        open={detailEntityId !== null}
+        onCancel={closeDetailModal}
+        footer={null}
+        destroyOnClose
+        width={detailContext?.detail?.width ?? 900}
+      >
+        {detailEntityId !== null && detailContext?.detail
+          ? detailContext.detail.render({
+              entityId: detailEntityId,
+              close: closeDetailModal,
+              openEdit: (entity) => {
+                closeDetailModal()
+                setEditingEntity(entity)
+              },
+            })
+          : null}
+      </Modal>
+
+      <Modal
+        title={detailContext?.create?.title}
+        open={isCreateModalOpen}
+        onCancel={closeCreateModal}
+        footer={null}
+        destroyOnClose
+        width={detailContext?.create?.width ?? 900}
+      >
+        {isCreateModalOpen && detailContext?.create
+          ? detailContext.create.render({ close: closeCreateModal })
+          : null}
+      </Modal>
+
+      <Modal
+        title={detailContext?.edit?.title}
+        open={editingEntity !== null}
+        onCancel={closeEditModal}
+        footer={null}
+        destroyOnClose
+        width={detailContext?.edit?.width ?? 900}
+      >
+        {editingEntity && detailContext?.edit
+          ? detailContext.edit.render({
+              entity: editingEntity,
+              close: closeEditModal,
+            })
+          : null}
+      </Modal>
 
       <Modal
         title="Manage Columns"

@@ -1,44 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
-import type { TableProps } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { OrderItem } from '../../types/entities'
 import { getOrderItems } from '../../api/orderItemApi'
 import { EntityListView } from '../../core/EntityListView'
+import { OrderItemDetailView } from './OrderItemDetailView'
+import { OrderItemEditView } from './OrderItemEditView'
 
 type OrderItemListViewProps = {
   mode?: 'page' | 'detailCtx'
   parentOrderId?: number
-  onOpenDetail?: (orderItemId: number) => void
-  onOpenEdit?: (entity: OrderItem) => void
-  onOpenCreate?: (parentOrderId?: number) => void
 }
 
 export function OrderItemListView({
   mode = 'page',
   parentOrderId,
-  onOpenDetail,
-  onOpenEdit,
-  onOpenCreate,
 }: OrderItemListViewProps) {
   const isDetailContext = mode === 'detailCtx'
   const { data, isLoading } = useQuery<OrderItem[], Error>({
     queryKey: ['orderItems', { orderId: parentOrderId }],
     queryFn: () => getOrderItems(isDetailContext ? { orderId: parentOrderId } : undefined),
   })
-
-  const detailContextRow: TableProps<OrderItem>['onRow'] | undefined = isDetailContext
-    ? (record) => ({
-        onClick: (event) => {
-          const target = event.target as HTMLElement
-          if (target.closest('.ant-table-selection-column')) {
-            return
-          }
-
-          onOpenDetail?.(record.id)
-        },
-        style: { cursor: 'pointer' },
-      })
-    : undefined
 
   const columns: ColumnsType<OrderItem> = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
@@ -73,15 +54,49 @@ export function OrderItemListView({
       dataSource={data ?? []}
       loading={isLoading}
       enableCreateEditActions
-      onRow={detailContextRow}
-      onCreateAction={
+      detailContext={
         isDetailContext
-          ? () => {
-              onOpenCreate?.(parentOrderId)
+          ? {
+              detail: {
+                title: 'Order Item Details',
+                width: 900,
+                render: ({ entityId, close, openEdit }) => (
+                  <OrderItemDetailView
+                    mode="detailCtx"
+                    orderItemId={entityId}
+                    onOpenEdit={openEdit}
+                    onClose={close}
+                  />
+                ),
+              },
+              edit: {
+                title: 'Edit Order Item',
+                width: 900,
+                render: ({ entity, close }) => (
+                  <OrderItemEditView
+                    mode="detailCtx"
+                    parentOrderId={parentOrderId}
+                    entity={entity}
+                    onSaved={close}
+                    onClose={close}
+                  />
+                ),
+              },
+              create: {
+                title: 'Create Order Item',
+                width: 900,
+                render: ({ close }) => (
+                  <OrderItemEditView
+                    mode="detailCtx"
+                    parentOrderId={parentOrderId}
+                    onSaved={close}
+                    onClose={close}
+                  />
+                ),
+              },
             }
           : undefined
       }
-      onEditAction={isDetailContext ? onOpenEdit : undefined}
     />
   )
 }
