@@ -1,9 +1,7 @@
-import { Card, Descriptions, Space, Typography } from 'antd'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { getCustomerById } from '../../api/customerApi'
-
-const { Text, Title } = Typography
+import { EntityDetailView } from '../../core/EntityDetailView'
 
 export function CustomerDetailView() {
   const { customerId } = useParams<{ customerId: string }>()
@@ -15,31 +13,24 @@ export function CustomerDetailView() {
     enabled: Number.isInteger(parsedCustomerId) && parsedCustomerId > 0,
   })
 
-  if (!customerId || !Number.isInteger(parsedCustomerId) || parsedCustomerId <= 0) {
-    return <Text type="danger">Invalid customer id.</Text>
-  }
-
-  if (isError) {
-    return <Text type="danger">Unable to load customer: {error.message}</Text>
-  }
-
   return (
-    <Space direction="vertical" size={16} className="entity-page">
-      <Link to="/customers">Back to Customers</Link>
-      <Card loading={isLoading}>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Customer Details
-          </Title>
-          <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="ID">{data?.id}</Descriptions.Item>
-            <Descriptions.Item label="Full Name">{data?.fullName}</Descriptions.Item>
-            <Descriptions.Item label="Email">{data?.email}</Descriptions.Item>
-            <Descriptions.Item label="Phone">{data?.phone}</Descriptions.Item>
-            <Descriptions.Item label="City">{data?.city}</Descriptions.Item>
-          </Descriptions>
-        </Space>
-      </Card>
-    </Space>
+    <EntityDetailView
+      entityName="customer"
+      backTo={{ label: 'Back to Customers', to: '/customers' }}
+      title="Customer Details"
+      invalid={!customerId || !Number.isInteger(parsedCustomerId) || parsedCustomerId <= 0}
+      invalidMessage="Invalid customer id."
+      error={isError ? error : null}
+      errorMessage="Unable to load customer"
+      data={data}
+      isLoading={isLoading}
+      fields={[
+        { key: 'id', label: 'ID', render: (entity) => entity?.id },
+        { key: 'fullName', label: 'Full Name', render: (entity) => entity?.fullName },
+        { key: 'email', label: 'Email', render: (entity) => entity?.email },
+        { key: 'phone', label: 'Phone', render: (entity) => entity?.phone },
+        { key: 'city', label: 'City', render: (entity) => entity?.city },
+      ]}
+    />
   )
 }

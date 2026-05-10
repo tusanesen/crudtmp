@@ -1,11 +1,9 @@
-import { Button, Card, Descriptions, Popconfirm, Space, Tooltip, Typography, message } from 'antd'
+import { message } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteOrderItem, getOrderItemById } from '../../api/orderItemApi'
+import { EntityDetailView } from '../../core/EntityDetailView'
 import type { OrderItem } from '../../types/entities'
-
-const { Text, Title } = Typography
 
 type OrderItemDetailViewProps = {
   mode?: 'page' | 'detailCtx'
@@ -48,85 +46,50 @@ export function OrderItemDetailView({
     },
   })
 
-  if (!orderItemId || !Number.isInteger(parsedOrderItemId) || parsedOrderItemId <= 0) {
-    return <Text type="danger">Invalid order item id.</Text>
-  }
-
-  if (isError) {
-    return <Text type="danger">Unable to load order item: {error.message}</Text>
-  }
-
   return (
-    <Space direction="vertical" size={16} className="entity-page">
-      {mode === 'page' ? <Link to="/order-items">Back to Order Items</Link> : null}
-      <Card loading={isLoading}>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
-          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-            <Tooltip title="Edit">
-              <Button
-                shape="circle"
-                icon={<EditOutlined />}
-                aria-label="Edit"
-                onClick={() => {
-                  if (!data) {
-                    return
-                  }
+    <EntityDetailView
+      entityName="order item"
+      backTo={mode === 'page' ? { label: 'Back to Order Items', to: '/order-items' } : undefined}
+      title="Order Item Details"
+      invalid={!orderItemId || !Number.isInteger(parsedOrderItemId) || parsedOrderItemId <= 0}
+      invalidMessage="Invalid order item id."
+      error={isError ? error : null}
+      errorMessage="Unable to load order item"
+      data={data}
+      isLoading={isLoading}
+      fields={[
+        { key: 'id', label: 'ID', render: (entity) => entity?.id },
+        { key: 'orderDisplay', label: 'Order', render: (entity) => entity?.orderDisplay },
+        { key: 'productDisplay', label: 'Product', render: (entity) => entity?.productDisplay },
+        { key: 'quantity', label: 'Quantity', render: (entity) => entity?.quantity },
+        {
+          key: 'unitPrice',
+          label: 'Unit Price',
+          render: (entity) => `$${entity?.unitPrice?.toFixed(2) ?? ''}`,
+        },
+        {
+          key: 'lineTotal',
+          label: 'Line Total',
+          render: (entity) => (entity ? `$${(entity.quantity * entity.unitPrice).toFixed(2)}` : ''),
+        },
+      ]}
+      actions={{
+        onEdit: (entity) => {
+          if (mode === 'detailCtx') {
+            onOpenEdit?.(entity)
+            return
+          }
 
-                  if (mode === 'detailCtx') {
-                    onOpenEdit?.(data)
-                    return
-                  }
-
-                  navigate('/order-items/edit', {
-                    state: {
-                      entity: data,
-                      returnTo: `/order-items/${parsedOrderItemId}`,
-                    },
-                  })
-                }}
-                disabled={!data}
-              />
-            </Tooltip>
-            <Popconfirm
-              title="Delete this order item?"
-              description="This action cannot be undone."
-              okText="Delete"
-              cancelText="Cancel"
-              okButtonProps={{ danger: true, loading: deleteMutation.isPending }}
-              onConfirm={() => {
-                if (data) {
-                  deleteMutation.mutate(data.id)
-                }
-              }}
-              disabled={!data}
-            >
-              <Tooltip title="Delete">
-                <Button
-                  danger
-                  shape="circle"
-                  icon={<DeleteOutlined />}
-                  aria-label="Delete"
-                  disabled={!data || deleteMutation.isPending}
-                />
-              </Tooltip>
-            </Popconfirm>
-          </Space>
-
-          <Title level={4} style={{ margin: 0 }}>
-            Order Item Details
-          </Title>
-          <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="ID">{data?.id}</Descriptions.Item>
-            <Descriptions.Item label="Order">{data?.orderDisplay}</Descriptions.Item>
-            <Descriptions.Item label="Product">{data?.productDisplay}</Descriptions.Item>
-            <Descriptions.Item label="Quantity">{data?.quantity}</Descriptions.Item>
-            <Descriptions.Item label="Unit Price">${data?.unitPrice?.toFixed(2)}</Descriptions.Item>
-            <Descriptions.Item label="Line Total">
-              {data ? `$${(data.quantity * data.unitPrice).toFixed(2)}` : ''}
-            </Descriptions.Item>
-          </Descriptions>
-        </Space>
-      </Card>
-    </Space>
+          navigate('/order-items/edit', {
+            state: {
+              entity,
+              returnTo: `/order-items/${parsedOrderItemId}`,
+            },
+          })
+        },
+        onDelete: (entity) => deleteMutation.mutate(entity.id),
+        isDeleting: deleteMutation.isPending,
+      }}
+    />
   )
 }

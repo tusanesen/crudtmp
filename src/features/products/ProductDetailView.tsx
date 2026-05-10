@@ -1,9 +1,7 @@
-import { Card, Descriptions, Space, Typography } from 'antd'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { getProductById } from '../../api/productApi'
-
-const { Text, Title } = Typography
+import { EntityDetailView } from '../../core/EntityDetailView'
 
 export function ProductDetailView() {
   const { productId } = useParams<{ productId: string }>()
@@ -15,32 +13,25 @@ export function ProductDetailView() {
     enabled: Number.isInteger(parsedProductId) && parsedProductId > 0,
   })
 
-  if (!productId || !Number.isInteger(parsedProductId) || parsedProductId <= 0) {
-    return <Text type="danger">Invalid product id.</Text>
-  }
-
-  if (isError) {
-    return <Text type="danger">Unable to load product: {error.message}</Text>
-  }
-
   return (
-    <Space direction="vertical" size={16} className="entity-page">
-      <Link to="/products">Back to Products</Link>
-      <Card loading={isLoading}>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Product Details
-          </Title>
-          <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="ID">{data?.id}</Descriptions.Item>
-            <Descriptions.Item label="Name">{data?.name}</Descriptions.Item>
-            <Descriptions.Item label="SKU">{data?.sku}</Descriptions.Item>
-            <Descriptions.Item label="Category">{data?.category}</Descriptions.Item>
-            <Descriptions.Item label="Price">${data?.price?.toFixed(2)}</Descriptions.Item>
-            <Descriptions.Item label="In Stock">{data?.inStock ? 'Yes' : 'No'}</Descriptions.Item>
-          </Descriptions>
-        </Space>
-      </Card>
-    </Space>
+    <EntityDetailView
+      entityName="product"
+      backTo={{ label: 'Back to Products', to: '/products' }}
+      title="Product Details"
+      invalid={!productId || !Number.isInteger(parsedProductId) || parsedProductId <= 0}
+      invalidMessage="Invalid product id."
+      error={isError ? error : null}
+      errorMessage="Unable to load product"
+      data={data}
+      isLoading={isLoading}
+      fields={[
+        { key: 'id', label: 'ID', render: (entity) => entity?.id },
+        { key: 'name', label: 'Name', render: (entity) => entity?.name },
+        { key: 'sku', label: 'SKU', render: (entity) => entity?.sku },
+        { key: 'category', label: 'Category', render: (entity) => entity?.category },
+        { key: 'price', label: 'Price', render: (entity) => `$${entity?.price?.toFixed(2) ?? ''}` },
+        { key: 'inStock', label: 'In Stock', render: (entity) => (entity?.inStock ? 'Yes' : 'No') },
+      ]}
+    />
   )
 }
