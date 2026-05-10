@@ -25,6 +25,15 @@ const columns: ColumnsType<Product> = [
   },
 ]
 
+const sortableColumns = {
+  id: { type: 'number', defaultOrder: 'ascend' },
+  name: { type: 'string' },
+  sku: { type: 'string' },
+  category: { type: 'string' },
+  price: { type: 'number' },
+  inStock: { type: 'boolean' },
+} as const
+
 export function ProductListView() {
   const { data, isLoading } = useQuery<Product[], Error>({
     queryKey: ['products'],
@@ -35,6 +44,7 @@ export function ProductListView() {
     <EntityListView<Product>
       apiPath="products"
       columns={columns}
+      sortableColumns={sortableColumns}
       dataSource={data ?? []}
       loading={isLoading}
     />

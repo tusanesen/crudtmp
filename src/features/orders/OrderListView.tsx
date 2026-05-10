@@ -6,6 +6,15 @@ import { OrderStatus } from '../../types/enums'
 import { getOrders } from '../../api/orderApi'
 import { EntityListView } from '../../core/EntityListView'
 
+const sortableColumns = {
+  id: { type: 'number' },
+  orderNumber: { type: 'string' },
+  customerId: { type: 'string', value: (record: Order) => record.customerDisplay },
+  orderDate: { type: 'date', defaultOrder: 'descend' },
+  status: { type: 'string' },
+  totalAmount: { type: 'number' },
+} as const
+
 export function OrderListView() {
   const { data, isLoading } = useQuery<Order[], Error>({
     queryKey: ['orders'],
@@ -40,6 +49,7 @@ export function OrderListView() {
     <EntityListView<Order>
       apiPath="orders"
       columns={columns}
+      sortableColumns={sortableColumns}
       dataSource={data ?? []}
       loading={isLoading}
       enableCreateEditActions

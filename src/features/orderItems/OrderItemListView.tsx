@@ -6,6 +6,15 @@ import { EntityListView } from '../../core/EntityListView'
 import { OrderItemDetailView } from './OrderItemDetailView'
 import { OrderItemEditView } from './OrderItemEditView'
 
+const sortableColumns = {
+  id: { type: 'number', defaultOrder: 'descend' },
+  orderId: { type: 'string', value: (record: OrderItem) => record.orderDisplay },
+  productId: { type: 'string', value: (record: OrderItem) => record.productDisplay },
+  quantity: { type: 'number' },
+  unitPrice: { type: 'number' },
+  lineTotal: { type: 'number', value: (record: OrderItem) => record.quantity * record.unitPrice },
+} as const
+
 type OrderItemListViewProps = {
   mode?: 'page' | 'detailCtx'
   parentOrderId?: number
@@ -51,6 +60,7 @@ export function OrderItemListView({
     <EntityListView<OrderItem>
       apiPath="order-items"
       columns={columns}
+      sortableColumns={sortableColumns}
       dataSource={data ?? []}
       loading={isLoading}
       enableCreateEditActions

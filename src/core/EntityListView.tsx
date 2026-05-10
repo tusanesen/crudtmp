@@ -44,6 +44,15 @@ type EntityListDetailContext<T extends EntityBase> = {
 type EntityListViewProps<T extends EntityBase> = {
   apiPath: string
   columns: TableProps<T>['columns']
+  sortableColumns?: Record<
+    string,
+    {
+      type: 'string' | 'number' | 'boolean' | 'date'
+      defaultOrder?: 'ascend' | 'descend'
+      compare?: (a: T, b: T) => number
+      value?: (record: T) => string | number | boolean | Date | null | undefined
+    }
+  >
   dataSource: TableProps<T>['dataSource']
   loading?: TableProps<T>['loading']
   onRow?: TableProps<T>['onRow']
@@ -81,6 +90,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
   const {
     apiPath,
     columns,
+    sortableColumns,
     dataSource,
     loading,
     onRow,
@@ -108,8 +118,95 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
   const [editingEntity, setEditingEntity] = useState<T | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
+  const enhancedColumns = useMemo<NonNullable<TableProps<T>['columns']>>(() => {
+    const baseColumns = (columns ?? []) as NonNullable<TableProps<T>['columns']>
+
+    return baseColumns.map((column) => {
+      const key =
+        typeof column.key === 'string' || typeof column.key === 'number'
+          ? String(column.key)
+          : Array.isArray(column.dataIndex)
+            ? column.dataIndex.join('.')
+            : typeof column.dataIndex === 'string'
+              ? column.dataIndex
+              : null
+
+      if (!key) {
+        return column
+      }
+
+      const sortConfig = sortableColumns?.[key]
+      if (!sortConfig) {
+        return column
+      }
+
+      const getValue = (record: T) => {
+        if (sortConfig.value) {
+          return sortConfig.value(record)
+        }
+
+        const dataIndex = column.dataIndex
+        if (typeof dataIndex === 'string') {
+          return (record as Record<string, unknown>)[dataIndex] as
+            | string
+            | number
+            | boolean
+            | Date
+            | null
+            | undefined
+        }
+
+        if (Array.isArray(dataIndex)) {
+          return dataIndex.reduce<unknown>((acc, part) => {
+            if (acc && typeof acc === 'object') {
+              return (acc as Record<string, unknown>)[String(part)]
+            }
+            return undefined
+          }, record) as string | number | boolean | Date | null | undefined
+        }
+
+        return undefined
+      }
+
+      const defaultCompare = (a: T, b: T) => {
+        const valueA = getValue(a)
+        const valueB = getValue(b)
+
+        if (valueA == null && valueB == null) {
+          return 0
+        }
+        if (valueA == null) {
+          return -1
+        }
+        if (valueB == null) {
+          return 1
+        }
+
+        if (sortConfig.type === 'number') {
+          return Number(valueA) - Number(valueB)
+        }
+
+        if (sortConfig.type === 'boolean') {
+          return Number(Boolean(valueA)) - Number(Boolean(valueB))
+        }
+
+        if (sortConfig.type === 'date') {
+          return new Date(String(valueA)).getTime() - new Date(String(valueB)).getTime()
+        }
+
+        return String(valueA).localeCompare(String(valueB))
+      }
+
+      return {
+        ...column,
+        sorter: sortConfig.compare ?? defaultCompare,
+        defaultSortOrder: sortConfig.defaultOrder,
+      }
+    })
+  }, [columns, sortableColumns])
+
   const [columnConfigs, setColumnConfigs] = useState<ColumnConfig<T>[]>(() =>
-    (columns ?? []).map((column, index) => {
+    enhancedColumns.map((column, index) => {
       const rawId =
         typeof column.key === 'string' || typeof column.key === 'number'
           ? column.key
@@ -145,7 +242,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
 
   useEffect(() => {
     setColumnConfigs((current) => {
-      const nextBase = (columns ?? []).map((column, index) => {
+      const nextBase = enhancedColumns.map((column, index) => {
         const rawId =
           typeof column.key === 'string' || typeof column.key === 'number'
             ? column.key
@@ -172,7 +269,7 @@ export function EntityListView<T extends EntityBase>(props: EntityListViewProps<
         }
       })
     })
-  }, [columns])
+  }, [enhancedColumns])
 
   useEffect(() => {
     if (selectedRowId !== null && !selectedRow) {

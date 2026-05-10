@@ -12,6 +12,14 @@ const columns: ColumnsType<Customer> = [
   { title: 'City', dataIndex: 'city', key: 'city' },
 ]
 
+const sortableColumns = {
+  fullName: { type: 'string', defaultOrder: 'ascend' },
+  id: { type: 'number' },
+  email: { type: 'string' },
+  phone: { type: 'string' },
+  city: { type: 'string' },
+} as const
+
 export function CustomerListView() {
   const { data, isLoading } = useQuery<Customer[], Error>({
     queryKey: ['customers'],
@@ -22,6 +30,7 @@ export function CustomerListView() {
     <EntityListView<Customer>
       apiPath="customers"
       columns={columns}
+      sortableColumns={sortableColumns}
       dataSource={data ?? []}
       loading={isLoading}
     />
